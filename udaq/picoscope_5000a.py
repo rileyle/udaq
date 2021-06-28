@@ -89,7 +89,7 @@ class PicoScope5000A:
 
     def __init__(self, serial=None, resolution_bits=12):
         """Instantiate the class and open the device."""
-        self._channels_enabled = {'A': True, 'B': True}
+        self._channels_enabled = {'A': True, 'B': True, 'C': False, 'D': False}
         self._input_voltage_ranges = {}
         self._input_offsets = {}
         self._input_adc_ranges = {}
@@ -122,8 +122,24 @@ class PicoScope5000A:
         else:
             raise PicoSDKError(f"PicoSDK returned {status_msg}")
 
+        #nChannelCombinations = ctypes.c_int16()
+        #channelFlags = ps.PS5000A_CHANNEL_FLAGS()
+
+        #assert_pico_ok(ps5000aChannelCombinationsStateless(self._handle,
+        #                ctypes.byref(channelFlags),
+        #                ctypes.byref(nChannelCombinations), 5, 1))
+        #print(nChannelCombinations)
+
+        #channelFlags = ps.PS5000A_CHANNEL_FLAGS*nChannelCombinations
+        #assert_pico_ok(ps5000aChannelCombinationsStateless(self._handle,
+        #                ctypes.byref(channelFlags),
+        #                ctypes.byref(nChannelCombinations), 5, 1))
+        #print(channelFlags)
+
         self.set_channel('A', is_enabled=False)
         self.set_channel('B', is_enabled=False)
+        self.set_channel('C', is_enabled=False)
+        self.set_channel('D', is_enabled=False)
 
     def close(self):
         """Close the device."""
@@ -239,7 +255,7 @@ class PicoScope5000A:
         """
         data = self.get_adc_data()
         if data is None:
-            return None, [None, None]
+            return None, [None, None, None, None]
         time_values = self._calculate_time_values(self._timebase,
                                                   self._num_samples)
 
@@ -473,6 +489,58 @@ class PicoScope5000A:
         else:
             assert_pico_ok(ps.ps5000aSetTriggerChannelConditionsV2(self._handle,
                                         ctypes.byref(trigConditionA), 0, clear))
+
+    def set_advanced_triggers(self, is_enabled, type, direction, threshold):
+        """Set the oscilloscope to trigger on both channels.
+
+        :param is_enabled (list): boolean: enable or disable for each channel
+        :param type (list): LEVEL or WINDOW (only LEVEL supported for now)
+        :param direction (list): the direction in which the signal must move
+            to cause a trigger for each channel
+        :param threshold (list): trigger threshold (in V) for each channel
+
+        The direction parameter can take values of 'ABOVE', 'BELOW', 'RISING',
+        'FALLING' or 'RISING_OR_FALLING'.
+        """
+        num_enabled = sum(list(is_enabled.values()))
+        trigDirList = []
+        trigPropList = []
+        for ch in 'A', 'B', 'C', 'D':
+            if is_enabled[ch]:
+                channel = _get_channel_from_name(ch)
+                dir = _get_trigger_direction_from_name(direction[ch])
+                type = ps.PS5000A_THRESHOLD_MODE["PS5000A_LEVEL"]
+                trigDirList.append(ps.PS5000A_DIRECTION(channel, dir, type))
+
+                thresh = self._rescale_V_to_adc(ch, threshold[ch])
+                prop = ps.PS5000A_TRIGGER_CHANNEL_PROPERTIES_V2(thresh,
+                    0, 0, 0, channel)
+                trigPropList.append(prop)
+
+        Directions = ps.PS5000A_DIRECTION*num_enabled
+        trigDirections = Directions(*trigDirList)
+
+        Properties = ps.PS5000A_TRIGGER_CHANNEL_PROPERTIES_V2*num_enabled
+        trigProperties = Properties(*trigPropList)
+
+        assert_pico_ok(ps.ps5000aSetTriggerChannelDirectionsV2(self._handle,
+            ctypes.byref(trigDirections), num_enabled))
+        assert_pico_ok(ps.ps5000aSetTriggerChannelPropertiesV2(self._handle,
+            ctypes.byref(trigProperties), num_enabled, 0))
+
+        state_true      = ps.PS5000A_TRIGGER_STATE["PS5000A_CONDITION_TRUE"]
+        clear     = 1 # 0b00000001
+        add       = 2 # 0b00000010
+        flag = clear + add
+        for ch in 'A', 'B', 'C', 'D':
+            if is_enabled[ch]:
+                channel = _get_channel_from_name(ch)
+                trigCondition = ps.PS5000A_CONDITION(channel, state_true)
+                state = ps.ps5000aSetTriggerChannelConditionsV2(self._handle,
+                    ctypes.byref(trigCondition), 1, flag)
+                assert_pico_ok(state)
+                flag = add
+        assert_pico_ok(ps.ps5000aSetAutoTriggerMicroSeconds(self._handle, 0))
 
     def _get_enabled_channels(self):
         """Return list of enabled channels."""
