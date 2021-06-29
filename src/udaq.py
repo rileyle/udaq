@@ -148,7 +148,7 @@ class udaq():
                 ph = (channel_data.max(axis=1) - bl)*1e3
                 if self._timing[ch] == 'PEAK':
                     ts = x[np.argmax(channel_data, axis=1)]
-                else: # ZERO
+                else: # ZERO (https://stackoverflow.com/questions/23289976/how-to-find-zero-crossings-with-hysteresis)
                     hi = channel_data >= self._threshold[ch]
                     lo = channel_data <= -self._threshold[ch]
                     if self._trigger_direction[ch] == 'FALLING':
