@@ -18,7 +18,7 @@ setuptools.setup(
 #    },
     entry_points={
         'console_scripts': [
-            'udaq=udaq.udaq:main',
+            'udaq=src.udaq:main',
         ],
     },
     classifiers=[
