@@ -148,7 +148,8 @@ class udaq():
                 ph = (channel_data.max(axis=1) - bl)*1e3
                 if self._timing[ch] == 'PEAK':
                     ts = x[np.argmax(channel_data, axis=1)]
-                else: # ZERO (https://stackoverflow.com/questions/23289976/how-to-find-zero-crossings-with-hysteresis)
+                else: # ZERO (https://stackoverflow.com/questions/23289976/
+                      #       how-to-find-zero-crossings-with-hysteresis)
                     hi = channel_data >= self._threshold[ch]
                     lo = channel_data <= -self._threshold[ch]
                     if self._trigger_direction[ch] == 'FALLING':
@@ -157,7 +158,8 @@ class udaq():
                     else: # RISING
                         y = lo[:, 1:]<lo[:, :-1]
                         z = hi[:, 1:]>hi[:, :-1]
-                    # Place a True at the end of the sampling period.
+                    # Place a True at the end of the sampling period to handle
+                    # failure to find a crossing.
                     fail = np.zeros(np.shape(y), dtype=bool)
                     fail[:,-1] = True
                     into  = np.where(y, y, fail)
@@ -197,16 +199,16 @@ class udaq():
         info_file.write(f'Configuration File: {str(self._config_filename)}\n')
         info_file.write('\n[Run]\n')
         info_file.write(f'Start Time: {time.ctime(self._t_start_run)}\n')
-        info_file.write(f'Run Time: {self._run_time:.1f} s\n')
+        info_file.write(f'Run Time (s): {self._run_time:.1f}\n')
         info_file.write(f'Events: {self._num_events}\n')
 
         info_file.write('\n[Sampling]\n')
-        info_file.write('Pre-Trigger Window: {0:.2e} s\n'\
+        info_file.write('Pre-Trigger Window (s): {0:.2e}\n'\
                         .format(self._pre_trigger_window))
-        info_file.write('Post-Trigger Window: {0:.2e} s\n'\
+        info_file.write('Post-Trigger Window (s): {0:.2e}\n'\
                         .format(self._post_trigger_window))
         info_file.write(f'Time Base: {self._timebase}\n')
-        info_file.write(f'Sample Interval: {self._sample_interval} ns\n')
+        info_file.write(f'Sample Interval (ns): {self._sample_interval}\n')
         info_file.write(f'Samples Per Capture: {self._num_samples}\n')
         info_file.write(f'Captures Per Block: {self._num_captures}\n')
 
@@ -223,7 +225,7 @@ class udaq():
                     .format(self._trigger_type[ch]))
                 info_file.write('Trigger Direction: {0}\n'\
                     .format(self._trigger_direction[ch]))
-                info_file.write('Threshold: {0:.2f} V\n'\
+                info_file.write('Threshold (V): {0:.2f}\n'\
                     .format(self._threshold[ch]))
 
         info_file.close()

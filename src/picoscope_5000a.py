@@ -5,7 +5,7 @@ Classes
 PicoScope5000A
     Interface to a 5000 Series PicoScope.
 """
-# WIP: determine if channels C and D are available
+
 
 import ctypes
 from threading import Event
@@ -121,20 +121,6 @@ class PicoScope5000A:
             raise DeviceNotFoundError()
         else:
             raise PicoSDKError(f"PicoSDK returned {status_msg}")
-
-        #nChannelCombinations = ctypes.c_int16()
-        #channelFlags = ps.PS5000A_CHANNEL_FLAGS()
-
-        #assert_pico_ok(ps5000aChannelCombinationsStateless(self._handle,
-        #                ctypes.byref(channelFlags),
-        #                ctypes.byref(nChannelCombinations), 5, 1))
-        #print(nChannelCombinations)
-
-        #channelFlags = ps.PS5000A_CHANNEL_FLAGS*nChannelCombinations
-        #assert_pico_ok(ps5000aChannelCombinationsStateless(self._handle,
-        #                ctypes.byref(channelFlags),
-        #                ctypes.byref(nChannelCombinations), 5, 1))
-        #print(channelFlags)
 
         self.set_channel('A', is_enabled=False)
         self.set_channel('B', is_enabled=False)

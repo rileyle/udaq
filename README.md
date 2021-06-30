@@ -1,6 +1,15 @@
-# udaq: A command-line/Python interface for data acquisition
+# udaq
 
-Run `udaq` from the command line:
+A command-line/Python interface for data acquisition from a 5000-series
+PicoScope
+
+The `./src/picoscope_5000a.py` interface is adopted from the
+[gamma-spectroscopy](https://github.com/davidfokkema/gamma-spectroscopy)
+package developed by David Fokkema and modified to incorporate advanced
+triggering and four-channel PicoScopes.
+
+---
+## Run `udaq` from the command line:
 
 ```
 udaq <configuration file name (relative path)>
@@ -15,7 +24,8 @@ file.
 
 `udaq` uses the
 [`configparser`](https://docs.python.org/3/library/configparser.html) package
-to read acquisition parameters from a text file.
+to read acquisition parameters from a text file. (The `.info` file uses this
+format to facilitate reading with a `configparser` as well.)
 
 See the sample configuration file: `./tools/udaq.config`
 
