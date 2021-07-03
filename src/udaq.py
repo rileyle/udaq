@@ -42,6 +42,7 @@ class udaq():
         self._t_start_run = 0
         self._run_time = 0
 
+        self._num_runs = 1
         self._output_path = None
         self._run_number = 0
         self._output_filename = None
@@ -67,6 +68,8 @@ class udaq():
         else:
             self._output_path = Path.cwd()/path
         self._run_time = config.getfloat('Run', 'Run Time')
+        if config.has_option('Run','Number of Runs'):
+            self._num_runs = config.getint('Run', 'Number of Runs')
 
         self._pre_trigger_window = config.getfloat('Sampling',
                                                     'Pre-Trigger Window')
@@ -230,22 +233,15 @@ class udaq():
 
         info_file.close()
 
-    def acquire_run(self):
-
-        self._set_channels()
-
-        self._set_sampling()
-
-        self._set_triggers()
-
-        self.scope.set_up_buffers(self._num_samples, self._num_captures)
+    def _acquire_run(self):
 
         self._open_output_file()
 
-        print(f'Run{self._run_number:04d}')
+        print(f'\nRun{self._run_number:04d}')
 
         self._t_start_run = time.time()
         elapsed_time = 0
+        self._num_events = 0
         while elapsed_time < self._run_time:
             self.scope.start_run(self._pre_samples, self._post_samples,
                                  self._timebase, self._num_captures)
@@ -263,8 +259,8 @@ class udaq():
             elapsed_time = time.time() - self._t_start_run
 
             print('Elapsed time: {0:.1f} s / {1:0.1f} s  | {2} events\r'\
-                .format(elapsed_time, self._run_time, self._num_events)
-                , end = '')
+                .format(elapsed_time, self._run_time, self._num_events),
+                end = '')
 
         self._run_time = elapsed_time
 
@@ -272,9 +268,22 @@ class udaq():
 
         self._write_info_file()
 
+    def acquire(self):
+
+        self._set_channels()
+        self._set_sampling()
+        self._set_triggers()
+        self.scope.set_up_buffers(self._num_samples, self._num_captures)
+
+        if self._num_runs > 1:
+            print(f'Acquiring {self._num_runs} runs.')
+        for run in range(self._num_runs):
+            self._acquire_run()
+
+
 def main():
     daq = udaq()
-    daq.acquire_run()
+    daq.acquire()
 
 
 if __name__ == '__main__':

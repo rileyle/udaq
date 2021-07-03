@@ -34,7 +34,9 @@ See the sample configuration file: `./tools/udaq.config`
 `Output Path` : relative path from the current directory to the directory where
 output files are written
 
-`Run time` : acquisition time in seconds
+`Run Time` : acquisition time in seconds
+
+`Number of Runs` : number of runs to acquire
 
 ### [Sampling]
 
