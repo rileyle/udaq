@@ -196,7 +196,7 @@ class udaq():
             info_file = open(info_filename, 'w', newline='', encoding="utf-8")
         except IOError:
             print(f'Error: Unable to open: {info_filename}\n')
-        info_file.write(f'Configuration File: {str(self._config_filename)}\n')
+        info_file.write(f'# Configuration File: {str(self._config_filename)}\n')
         info_file.write('\n[Run]\n')
         info_file.write(f'Start Time: {time.ctime(self._t_start_run)}\n')
         info_file.write(f'Run Time (s): {self._run_time:.1f}\n')
