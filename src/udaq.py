@@ -16,12 +16,13 @@ class udaq():
 
         self._num_events = 0
 
-        self._coupling =  {'A': 'DC', 'B': 'DC', 'C': 'DC', 'D': 'DC'}
+        self._coupling = {'A': 'DC', 'B': 'DC', 'C': 'DC', 'D': 'DC'}
+        self._polarity = {'A': 1, 'B': 1, 'C': 1, 'D': 1}
         self._is_enabled = {'A': False, 'B': False, 'C': False, 'D': False}
         self._is_trigger_enabled = {'A': False, 'B': False,
                                     'C': False, 'D': False}
-        self._trigger_type = {'A': 'Level', 'B': 'Level',
-                              'C': 'Level', 'D': 'Level'}
+        self._trigger_type = {'A': 'LEVEL', 'B': 'LEVEL',
+                              'C': 'LEVEL', 'D': 'LEVEL'}
         self._trigger_direction = {'A': 'RISING', 'B': 'RISING',
                                    'C': 'RISING', 'D': 'RISING'}
         self._range = {'A': 10, 'B': 10, 'C': 10, 'D': 10}
@@ -40,6 +41,7 @@ class udaq():
         self._num_captures = 0
 
         self._t_start_run = 0
+        self._elapsed_time = 0
         self._run_time = 0
 
         self._num_runs = 1
@@ -84,6 +86,7 @@ class udaq():
             self._is_enabled[ch] = sec in config.sections()
             if self._is_enabled[ch]:
                 self._coupling[ch] = config[sec]['Coupling']
+                self._polarity[ch] = np.sign(config.getint(sec, 'Polarity'))
                 self._range[ch] = config.getfloat(sec, 'Range')
                 self._is_baseline_correction_enabled[ch] \
                     = config[sec].getboolean('Baseline Correction')
@@ -144,13 +147,17 @@ class udaq():
         for ch in self._CHANNELS:
             if self._is_enabled[ch]:
                 channel_data = data[ch]
-                if self._is_baseline_correction_enabled[ch] and bl_samples > 0:
-                    bl = channel_data[:, :bl_samples].mean(axis=1)
-                else:
-                    bl = np.zeros(len(channel_data))
-                ph = (channel_data.max(axis=1) - bl)*1e3
                 if self._timing[ch] == 'PEAK':
-                    ts = x[np.argmax(channel_data, axis=1)]
+                    ts = x[np.argmax(channel_data*self._polarity[ch], axis=1)]
+                elif self._timing[ch] == 'LEVEL':
+                    hi = channel_data >= self._threshold[ch]
+                    lo = channel_data <= self._threshold[ch]
+                    if self._trigger_direction[ch] == 'FALLING':
+                        y = hi[:, 1:]<hi[:, :-1]
+                        z = lo[:, 1:]>lo[:, :-1]
+                    else: # RISING
+                        y = lo[:, 1:]<lo[:, :-1]
+                        z = hi[:, 1:]>hi[:, :-1]
                 else: # ZERO (https://stackoverflow.com/questions/23289976/
                       #       how-to-find-zero-crossings-with-hysteresis)
                     hi = channel_data >= self._threshold[ch]
@@ -172,6 +179,12 @@ class udaq():
                     i_out = np.argmax(outof, axis=1)
                     ts = x[i_out]
                 times.append(ts)
+                channel_data *= self._polarity[ch]
+                if self._is_baseline_correction_enabled[ch] and bl_samples > 0:
+                    bl = channel_data[:, :bl_samples].mean(axis=1)
+                else:
+                    bl = np.zeros(len(channel_data))
+                ph = (channel_data.max(axis=1) - bl)*1e3
                 pulseheights.append(ph)
         times = np.array(times)
         return np.array(times), np.array(pulseheights)
@@ -202,7 +215,7 @@ class udaq():
         info_file.write(f'# Configuration File: {str(self._config_filename)}\n')
         info_file.write('\n[Run]\n')
         info_file.write(f'Start Time: {time.ctime(self._t_start_run)}\n')
-        info_file.write(f'Run Time (s): {self._run_time:.1f}\n')
+        info_file.write(f'Run Time (s): {self._elapsed_time:.1f}\n')
         info_file.write(f'Events: {self._num_events}\n')
 
         info_file.write('\n[Sampling]\n')
@@ -219,9 +232,11 @@ class udaq():
             if self._is_enabled[ch]:
                 info_file.write(f'\n[Channel {ch}]\n')
                 info_file.write(f'Coupling: {self._coupling[ch]}\n')
+                info_file.write(f'Polarity: {self._polarity[ch]}\n')
                 info_file.write(f'Range: {self._range[ch]}\n')
                 info_file.write('Baseline Correction: {0}\n'\
                     .format(self._is_baseline_correction_enabled[ch]))
+                info_file.write(f'Timing: {self._timing[ch]}\n')
                 info_file.write('Trigger Enabled: {0}\n'\
                     .format(self._is_trigger_enabled[ch]))
                 info_file.write('Trigger Type: {0}\n'\
@@ -240,9 +255,9 @@ class udaq():
         print(f'\nRun{self._run_number:04d}')
 
         self._t_start_run = time.time()
-        elapsed_time = 0
+        self._elapsed_time = 0
         self._num_events = 0
-        while elapsed_time < self._run_time:
+        while self._elapsed_time < self._run_time:
             self.scope.start_run(self._pre_samples, self._post_samples,
                                  self._timebase, self._num_captures)
             self.scope.wait_for_data()
@@ -256,13 +271,11 @@ class udaq():
 
             self._write_output(times, pulseheights)
 
-            elapsed_time = time.time() - self._t_start_run
+            self._elapsed_time = time.time() - self._t_start_run
 
             print('Elapsed time: {0:.1f} s / {1:0.1f} s  | {2} events\r'\
-                .format(elapsed_time, self._run_time, self._num_events),
+                .format(self._elapsed_time, self._run_time, self._num_events),
                 end = '')
-
-        self._run_time = elapsed_time
 
         self._close_output_file()
 
