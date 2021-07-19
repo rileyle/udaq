@@ -243,7 +243,7 @@ class udaq():
                     .format(self._trigger_type[ch]))
                 info_file.write('Trigger Direction: {0}\n'\
                     .format(self._trigger_direction[ch]))
-                info_file.write('Threshold (V): {0:.2f}\n'\
+                info_file.write('Threshold (V): {0:.4f}\n'\
                     .format(self._threshold[ch]))
 
         info_file.close()
