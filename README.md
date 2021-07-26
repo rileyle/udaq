@@ -9,6 +9,21 @@ package developed by David Fokkema and modified to incorporate advanced
 triggering and four-channel PicoScopes.
 
 ---
+## Setup and Installation
+
+### Dependencies
+- Python 3
+- NumPy
+- PicoSDK C libraries (see instructions in the README for the
+  [PicoSDK Python wrappers](https://github.com/picotech/picosdk-python-wrappers))
+- [PicoSDK Python wrappers](https://github.com/picotech/picosdk-python-wrappers)
+
+### Install
+
+```
+pip install git+https://github.com/rileyle/udaq
+```
+
 ## Run `udaq` from the command line:
 
 ```

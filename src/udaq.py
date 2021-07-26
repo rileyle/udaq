@@ -149,19 +149,14 @@ class udaq():
                 channel_data = data[ch]
                 if self._timing[ch] == 'PEAK':
                     ts = x[np.argmax(channel_data*self._polarity[ch], axis=1)]
-                elif self._timing[ch] == 'LEVEL':
-                    hi = channel_data >= self._threshold[ch]
-                    lo = channel_data <= self._threshold[ch]
-                    if self._trigger_direction[ch] == 'FALLING':
-                        y = hi[:, 1:]<hi[:, :-1]
-                        z = lo[:, 1:]>lo[:, :-1]
-                    else: # RISING
-                        y = lo[:, 1:]<lo[:, :-1]
-                        z = hi[:, 1:]>hi[:, :-1]
-                else: # ZERO (https://stackoverflow.com/questions/23289976/
+                else: # ZERO or LEVEL
+                      #     (https://stackoverflow.com/questions/23289976/
                       #       how-to-find-zero-crossings-with-hysteresis)
                     hi = channel_data >= self._threshold[ch]
-                    lo = channel_data <= -self._threshold[ch]
+                    if self._timing[ch] == 'ZERO':
+                        lo = channel_data <= -self._threshold[ch]
+                    else: # lEVEL
+                        lo = channel_data <= self._threshold[ch]
                     if self._trigger_direction[ch] == 'FALLING':
                         y = hi[:, 1:]<hi[:, :-1]
                         z = lo[:, 1:]>lo[:, :-1]
