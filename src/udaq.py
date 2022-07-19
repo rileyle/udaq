@@ -211,6 +211,7 @@ class udaq():
         for ch in self._CHANNELS:
             if self._is_enabled[ch] and self._traces[ch] > 0:
                 channel_data = data[ch]
+                evt = self._num_events + 1
                 for trace in channel_data:
                     grad = np.gradient(trace)
                     # Find groups of consecutive identical values in an array.
@@ -238,13 +239,14 @@ class udaq():
 
                         if (self._traces[ch] == 1) or \
                             ((self._traces[ch] == 2) and (i2 - i1 > w1 + w2)):
-                            self._write_trace(ch, x, trace)
+                            self._write_trace(ch, evt, x, trace)
                             self._num_traces += 1
+                evt += 1
 
-    def _write_trace(self, ch, t, trace):
+    def _write_trace(self, ch, evt, t, trace):
         if not self._trace_file_isopen:
             self._open_trace_file()
-        self._trace_file.write(ch+'\n')
+        self._trace_file.write(f'{ch},{evt}\n')
         # Use better precision than 12 bits to be safe.
         np.savetxt(self._trace_file, [t], delimiter=',', fmt='%.5e')
         np.savetxt(self._trace_file, [trace], delimiter=',', fmt='%.5e')
@@ -343,8 +345,6 @@ class udaq():
                                  self._timebase, self._num_captures)
             self.scope.wait_for_data()
 
-            self._num_events += self._num_captures
-
             keys = ['x', 'A', 'B', 'C', 'D']
             x, [A, B, C, D] = self.scope.get_data()
             data = dict(zip(keys, [x, A, B, C, D]))
@@ -353,6 +353,8 @@ class udaq():
             self._write_output(times, pulseheights)
             
             self._process_traces(data)
+
+            self._num_events += self._num_captures
 
             self._elapsed_time = time.time() - self._t_start_run
 
