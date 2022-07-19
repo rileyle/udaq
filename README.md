@@ -98,9 +98,8 @@ and for `ZERO` timing.
 signals. Write time and voltage data from all enabled channels to a CSV 
 file `RUNXXXX_traces.csv`. (See also `Pulse Width`)
 
-`Pulse Width` : Width in samples of the minimum rise time of signals on
-this channel for the purpose of identifying traces to write. (See also 
-`Traces`.)
+`Pulse Width` : Rise time in samples of signals on this channel, used for 
+the purpose of identifying traces to write. (See also `Traces`.)
 
 The `ZERO` timing strategy determines the time the signal leaves a window
 between +`Threshold` and -`Threshold`. If `Trigger Direction` is `RISING`, the
