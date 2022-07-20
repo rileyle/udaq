@@ -239,7 +239,7 @@ class udaq():
 
                         if (self._traces[ch] == 1) or \
                             ((self._traces[ch] == 2) and (i2 - i1 > w1 + w2)):
-                            self._write_trace(ch, evt, x, trace)
+                            self._write_trace(ch, evt, x, trace*1e3) # mV
                             self._num_traces += 1
                 evt += 1
 
