@@ -232,10 +232,11 @@ class udaq():
                         iSignals = np.where(signals)[0] - 1
                         i1 = indices[iSignals[0]]
                         w1 = items[iSignals[0]+1]
-                        if w1 == 0:
-                            continue
                         baseline1    = np.mean(trace[i1-5:i1-1])
-                        pulseheight1 = np.max(trace[i1:i1+w1])-baseline1
+                        try:
+                            pulseheight1 = np.max(trace[i1:i1+w1])-baseline1
+                        except:
+                            continue
 
                         # Find the largest additional pulse in the trace.
                         maxPh = 0
@@ -244,18 +245,17 @@ class udaq():
                         for j in range(1, number_of_signals, 1):
                             ii = indices[iSignals[j]]
                             ww = items[iSignals[j]+1]
-                            if ww == 0:
-                                continue
                             bl = np.mean(trace[ii-5:ii-1])
-                            ph = np.max(trace[ii:ii+ww])-bl
+                            try:
+                                ph = np.max(trace[ii:ii+ww])-bl
+                            except:
+                                continue
                             if ph > maxPh:
                                 i2 = ii
                                 w2 = ww
                                 pulseheight2 = ph
                                 maxPh = ph
-                        if w2 == 0:
-                            continue
-                        
+
                         if (self._traces[ch] == 1) or \
                             ((self._traces[ch] == 2) and (i2 - i1 > w1) \
                              and (pulseheight2 > np.abs(self._threshold[ch]))):
