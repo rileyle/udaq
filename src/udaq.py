@@ -228,17 +228,38 @@ class udaq():
                         items = [gg[1] for gg in grouped_grad]
                         indices = np.cumsum(items)
 
-                        # Look up the indices and widths of the pulses in the trace.
+                        # Find the first pulse in the trace.
                         iSignals = np.where(signals)[0] - 1
                         i1 = indices[iSignals[0]]
                         w1 = items[iSignals[0]+1]
-                        
-                        if number_of_signals > 1:
-                            i2 = indices[iSignals[1]]
-                            w2 = items[iSignals[1]+1]
+                        if w1 == 0:
+                            continue
+                        baseline1    = np.mean(trace[i1-5:i1-1])
+                        pulseheight1 = np.max(trace[i1:i1+w1])-baseline1
 
+                        # Find the largest additional pulse in the trace.
+                        maxPh = 0
+                        w2 = 0
+                        pulseheight2 = 0
+                        for j in range(1, number_of_signals, 1):
+                            ii = indices[iSignals[j]]
+                            ww = items[iSignals[j]+1]
+                            if ww == 0:
+                                continue
+                            bl = np.mean(trace[ii-5:ii-1])
+                            ph = np.max(trace[ii:ii+ww])-bl
+                            if ph > maxPh:
+                                i2 = ii
+                                w2 = ww
+                                pulseheight2 = ph
+                                maxPh = ph
+                        if w2 == 0:
+                            continue
+                        
                         if (self._traces[ch] == 1) or \
-                            ((self._traces[ch] == 2) and (i2 - i1 > w1 + w2)):
+                            ((self._traces[ch] == 2) and (i2 - i1 > w1) \
+                             and (pulseheight2 > np.abs(self._threshold[ch]))):
+                            #((self._traces[ch] == 2) and (i2 - i1 > w1 + w2)):
                             self._write_trace(ch, evt, x, trace*1e3) # mV
                             self._num_traces += 1
                 evt += 1
