@@ -33,7 +33,7 @@ class udaq():
         self._threshold = {'A': 0.0, 'B': 0.0, 'C': 0.0, 'D': 0.0}
         self._timing = {'A': 'PEAK', 'B': 'PEAK', 'C': 'PEAK', 'D': 'PEAK'}
         self._traces = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
-        self._pulse_width = {'A': 10, 'B': 10, 'C': 10, 'D': 10}
+        self._rise_time = {'A': 10, 'B': 10, 'C': 10, 'D': 10}
 
         self._timebase = 0
         self._sample_interval = 0
@@ -108,9 +108,9 @@ class udaq():
                 self._threshold[ch] = self._config[sec].getfloat('Threshold')
                 if self._config.has_option(sec,'Traces'):
                     self._traces[ch] = self._config[sec].getint('Traces')
-                if self._config.has_option(sec,'Pulse Width'):
-                    self._pulse_width[ch] \
-                        = self._config[sec].getint('Pulse Width')
+                if self._config.has_option(sec,'Rise Time'):
+                    self._rise_time[ch] \
+                        = self._config[sec].getint('Rise Time')
 
     def _set_channels(self):
         for ch in self._CHANNELS:
@@ -219,7 +219,7 @@ class udaq():
                     grouped_grad = [(k, sum(1 for i in g)) for k,g in groupby(grad>0)]
 
                     # Identify pulses within grouped_gradient list.
-                    signals = [(gg[0] == True and gg[1] > self._pulse_width[ch]) for gg in grouped_grad]
+                    signals = [(gg[0] == True and gg[1] > self._rise_time[ch]) for gg in grouped_grad]
                     number_of_signals = sum(signals)
 
                     if number_of_signals >= self._traces[ch]:
@@ -342,9 +342,9 @@ class udaq():
                 if self._config.has_option(sec,'Traces'):
                     info_file.write('Traces: {0:d}\n'\
                     .format(self._traces[ch]))
-                if self._config.has_option(sec,'Pulse Width'):
-                    info_file.write('Pulse Width: {0:d}\n'\
-                    .format(self._pulse_width[ch]))
+                if self._config.has_option(sec,'Rise Time'):
+                    info_file.write('Rise Time: {0:d}\n'\
+                    .format(self._rise_time[ch]))
 
         info_file.close()
 

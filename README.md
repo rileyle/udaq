@@ -94,12 +94,13 @@ and for `ZERO` timing.
 `Threshold` : Trigger threshold in V. This value is used for triggering and
 `ZERO` timing.
 
-`Traces` : `1` : Write all traces, `2` : write only traces including two 
-signals. Write time and voltage data from all enabled channels to a CSV 
-file `RUNXXXX_traces.csv`. (See also `Pulse Width`)
+`Traces` : (optional) `1` : Write all traces, `2` : write only traces
+including two signals. Write time and voltage data from all enabled
+channels to a CSV file `RUNXXXX_traces.csv`. (See also `Rise Time`)
 
-`Pulse Width` : Rise time in samples of signals on this channel, used for 
-the purpose of identifying traces to write. (See also `Traces`.)
+`Rise Time` : (optional) Rise time in samples of signals on this
+channel, used for the purpose of identifying traces to write. (See
+also `Traces`.)
 
 The `ZERO` timing strategy determines the time the signal leaves a window
 between +`Threshold` and -`Threshold`. If `Trigger Direction` is `RISING`, the
