@@ -133,7 +133,10 @@ class udaq():
     def _open_output_file(self):
         for x in Path(self._output_path).glob('*.csv'):
             if x.is_file() and x.name[0:3] == 'Run':
-                self._run_number = int(x.name[3:7]) + 1
+                print(f'Found CSV file {x}. Current run number is {self._run_number}. x.name[3:7] = {x.name[3:7]}.')
+                if self._run_number <= int(x.name[3:7]):
+                    self._run_number = int(x.name[3:7]) + 1
+                print(f'  => New run number is {self._run_number}.')
 
         self._output_filename =  self._output_path / 'Run{0:04d}.csv'\
                                                        .format(self._run_number)
