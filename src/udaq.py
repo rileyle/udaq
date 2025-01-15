@@ -31,7 +31,7 @@ class udaq():
         self._is_baseline_correction_enabled = {'A': False, 'B': False,
                                                 'C': False, 'D': False}
         self._threshold = {'A': 0.0, 'B': 0.0, 'C': 0.0, 'D': 0.0}
-        self._timing = {'A': 'PEAK', 'B': 'PEAK', 'C': 'PEAK', 'D': 'PEAK'}
+        self._timing = {'A': 'LEVEL', 'B': 'LEVEL', 'C': 'LEVEL', 'D': 'LEVEL'}
         self._traces = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
         self._rise_time = {'A': 10, 'B': 10, 'C': 10, 'D': 10}
 
@@ -131,6 +131,10 @@ class udaq():
             self._trigger_type, self._trigger_direction, self._threshold, )
 
     def _open_output_file(self):
+        for x in Path(self._output_path).glob('*.csv'):
+            if x.is_file() and x.name[0:3] == 'Run':
+                self._run_number = int(x.name[3:7]) + 1
+
         self._output_filename =  self._output_path / 'Run{0:04d}.csv'\
                                                        .format(self._run_number)
 
@@ -203,7 +207,6 @@ class udaq():
                     bl = np.zeros(len(channel_data))
                 ph = (channel_data.max(axis=1) - bl)*1e3
                 pulseheights.append(ph)
-        #times = np.array(times) # This is redundant.
         return np.array(times), np.array(pulseheights)
 
     def _process_traces(self, data):
@@ -350,9 +353,6 @@ class udaq():
 
     def _acquire_run(self):
 
-        for x in Path(self._output_path).glob('*.csv'):
-            if x.is_file() and x.name[0:3] == 'Run':
-                self._run_number = int(x.name[3:7]) + 1
         self._open_output_file()
 
         print(f'\nRun{self._run_number:04d}')
