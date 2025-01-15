@@ -226,6 +226,8 @@ class udaq():
                     signals = [(gg[0] == True and gg[1] > self._rise_time[ch]) for gg in grouped_grad]
                     number_of_signals = sum(signals)
 
+                    i1 = -1
+                    w1 = 0
                     if number_of_signals >= self._traces[ch]:
                         # Indices of items in the trace at the beginning of each group
                         # in grouped_gradient list.
@@ -244,6 +246,7 @@ class udaq():
 
                         # Find the largest additional pulse in the trace.
                         maxPh = 0
+                        i2 = -1
                         w2 = 0
                         pulseheight2 = 0
                         for j in range(1, number_of_signals, 1):
@@ -261,7 +264,8 @@ class udaq():
                                 maxPh = ph
 
                         if (self._traces[ch] == 1) or \
-                            ((self._traces[ch] == 2) and (i2 - i1 > w1) \
+                            ((self._traces[ch] == 2) and \
+                             (i1 >= 0) and (i2 >= 0) and (i2 - i1 > w1) \
                              and (pulseheight2 > np.abs(self._threshold[ch]))):
                             #((self._traces[ch] == 2) and (i2 - i1 > w1 + w2)):
                             self._write_trace(ch, evt, x, trace*1e3) # mV
