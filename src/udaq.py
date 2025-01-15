@@ -132,6 +132,7 @@ class udaq():
 
     def _open_output_file(self):
         for x in Path(self._output_path).glob('*.csv'):
+            print(x)
             if x.is_file() and x.name[0:3] == 'Run':
                 print(f'Found CSV file {x}. Current run number is {self._run_number}. x.name[3:7] = {x.name[3:7]}.')
                 if self._run_number <= int(x.name[3:7]):
