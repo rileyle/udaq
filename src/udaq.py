@@ -229,8 +229,8 @@ class udaq():
                     i1 = -1
                     w1 = 0
                     if number_of_signals >= self._traces[ch]:
-                        # Indices of items in the trace at the beginning of each group
-                        # in grouped_gradient list.
+                        # Indices of items in the trace at the beginning of each
+                        # group in grouped_gradient list.
                         items = [gg[1] for gg in grouped_grad]
                         indices = np.cumsum(items)
 
@@ -238,7 +238,12 @@ class udaq():
                         iSignals = np.where(signals)[0] - 1
                         i1 = indices[iSignals[0]]
                         w1 = items[iSignals[0]+1]
-                        baseline1    = np.mean(trace[i1-5:i1-1])
+                        if i1 == 0:
+                            baseline1 = 0
+                        elif i1 < 5:
+                            baseline1 = np.mean(trace[0:i1-1])
+                        else:
+                            baseline1 = np.mean(trace[i1-5:i1-1])
                         try:
                             pulseheight1 = np.max(trace[i1:i1+w1])-baseline1
                         except:
